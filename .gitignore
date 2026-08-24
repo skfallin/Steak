@@ -1,0 +1,66 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode build products and per-user state
+.derived-data*/
+DerivedData/
+build/
+Build/
+*.xcarchive
+*.ipa
+*.xcresult
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.xcuserdatad/
+xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+*.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+*.xcindexstore
+*.xcindexstore/
+*.xcactivitylog
+*.xcbuildlog
+*.dSYM
+*.dSYM.zip
+
+# Swift Package Manager caches (Package.resolved is intentionally tracked)
+.build/
+.swiftpm/xcode/package.xcworkspace/
+.swiftpm/configuration/
+.swiftpm/security/
+.swiftpm/xcode/xcuserdata/
+
+# Signing, provisioning, and local secrets
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.p8
+*.cer
+*.key
+*.pem
+*.entitlements.local
+Secrets*.xcconfig
+Local*.xcconfig
+.env
+.env.*
+*.env
+!.env.example
+
+# Local SwiftData / SQLite runtime stores
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.store
+*.store-shm
+*.store-wal
+
+# Local assistant and design tooling
+.lazyweb/
+.codex/
+.agents/
