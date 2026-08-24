@@ -1,7 +1,7 @@
 # Steak
 
 <p align="center">
-  <img src="Steak/Assets.xcassets/AppIcon.appiconset/AppIcon.png" alt="Steak app icon" width="128" />
+  <img src="Documentation/SteakIcon.png" alt="Steak app icon" width="128" />
 </p>
 
 <p align="center"><strong>Track what you eat. Hit your goals.</strong></p>
