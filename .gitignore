@@ -64,3 +64,8 @@ Local*.xcconfig
 .lazyweb/
 .codex/
 .agents/
+/.planning/
+
+# Graphify generated graph and local Codex integration
+/graphify-out/
+/AGENTS.md

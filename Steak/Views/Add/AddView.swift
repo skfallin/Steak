@@ -76,18 +76,28 @@ final class AddViewModel {
     }
 
     private func lookup(_ barcode: String) async {
+        barcodeLog("lookup started: \(barcode)")
         do {
             let product = try await service.product(barcode: barcode)
             if product.hasNutrition {
                 selectedProduct = product
+                barcodeLog("lookup succeeded: \(barcode)")
             } else {
                 notFoundBarcode = barcode
                 isLookingUpBarcode = false
+                barcodeLog("lookup no nutrition: \(barcode)")
             }
         } catch {
             notFoundBarcode = barcode
             isLookingUpBarcode = false
+            barcodeLog("lookup failed: \(String(reflecting: type(of: error))): \(String(describing: error))")
         }
+    }
+
+    private func barcodeLog(_ message: @autoclosure () -> String) {
+        #if DEBUG
+        print("[BarcodeScanner] \(message())")
+        #endif
     }
 }
 
@@ -95,6 +105,8 @@ struct AddView: View {
     @State private var vm = AddViewModel()
     @State private var cameraStatus: AVAuthorizationStatus = CameraPermission.status
     @State private var panelExpanded = ProcessInfo.processInfo.arguments.contains("-uitest-expand-search")
+    @State private var scannerGuideFrame: CGRect = .zero
+    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var searchFocused: Bool
 
     var body: some View {
@@ -108,7 +120,9 @@ struct AddView: View {
                         isActive: !vm.isLookingUpBarcode
                             && vm.selectedProduct == nil
                             && vm.notFoundBarcode == nil
-                            && !vm.showManualForm,
+                            && !vm.showManualForm
+                            && scenePhase == .active,
+                        regionOfInterest: scannerGuideFrame,
                         onCodeScanned: { code, _ in vm.handleScannedCode(code) },
                         onScannerError: vm.setScannerError
                     )
@@ -187,6 +201,11 @@ struct AddView: View {
             RoundedRectangle(cornerRadius: 18)
                 .strokeBorder(.white.opacity(0.9), lineWidth: 2)
                 .frame(width: 320, height: 118)
+                .onGeometryChange(for: CGRect.self, of: { proxy in
+                    proxy.frame(in: .global)
+                }) { frame in
+                    scannerGuideFrame = frame
+                }
                 .shadow(color: .black.opacity(0.35), radius: 8)
 
             scannerStatus
