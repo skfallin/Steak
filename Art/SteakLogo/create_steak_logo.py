@@ -1,7 +1,6 @@
 """Create the editable Steak brand model and transparent product render."""
 import bpy
 import math
-import random
 from pathlib import Path
 from mathutils import Vector
 
@@ -66,29 +65,25 @@ def line(name, points, radius, mat):
     obj.data.materials.append(mat)
     obj.scale.z = 0.16
     obj.location.z = 0.473 * 0.84
-    spline.bezier_points[0].radius = 0.2
-    spline.bezier_points[-1].radius = 0.2
+    spline.bezier_points[0].radius = 0.5
+    spline.bezier_points[-1].radius = 0.5
     return obj
 
-line('Central fat seam',[(-0.9,-0.77,0.475),(-0.57,-0.49,0.484),(-0.07,-0.25,0.484),(0.18,0.17,0.484),(0.07,0.55,0.484),(-0.2,0.81,0.473)],0.037,vein)
-line('Ribeye cap seam',[(-1.17,0.25,0.474),(-0.74,0.36,0.482),(-0.2,0.26,0.485),(0.18,0.17,0.485),(0.62,0.43,0.484),(1.03,0.68,0.474)],0.032,vein)
-line('Lower fat fork',[(-0.57,-0.49,0.484),(-0.7,-0.24,0.484),(-1.02,-0.1,0.484),(-1.18,0.18,0.477)],0.027,vein)
-
-def inside(x,y):
-    polygon=[(a*.86,b*.86) for a,b in outline]
-    hit=False
-    for (a,b),(c,d) in zip(polygon,polygon[1:]+polygon[:1]):
-        if (b>y)!=(d>y) and x<(c-a)*(y-b)/(d-b)+a:hit=not hit
-    return hit
-
-random.seed(19)
-for i in range(125):
-    x=random.uniform(-1.3,1.3);y=random.uniform(-.85,.85)
-    length=random.uniform(.07,.26)
-    pts=[(x+length*t,y+.07*math.sin(t*2+i)+length*t*.45,.473) for t in (-1,-.5,0,.5,1)]
-    if all(inside(a,b) for a,b,c in pts):
-        obj=line('Marbling %03d'%i,pts,random.uniform(.004,.012),vein)
-        for j,p in enumerate(obj.data.splines[0].bezier_points):p.radius=[.1,.7,1,.7,.1][j]
+# Three broad lobes share one continuous seam and a single connected branch.
+line('Central fat seam', [
+    (-0.9, -0.77, 0.473),
+    (-0.53, -0.46, 0.473),
+    (-0.07, -0.25, 0.473),
+    (0.18, 0.17, 0.473),
+    (0.07, 0.55, 0.473),
+    (-0.2, 0.81, 0.473),
+], 0.055, vein)
+branch = line('Ribeye cap seam', [
+    (0.18, 0.17, 0.473),
+    (0.57, 0.39, 0.473),
+    (1.03, 0.68, 0.473),
+], 0.044, vein)
+branch.data.splines[0].bezier_points[0].radius = 1.0
 
 models=[o for o in bpy.context.scene.objects if o.type in {'MESH','CURVE'}]
 root=bpy.data.objects.new('Steak Logo',None);bpy.context.collection.objects.link(root)

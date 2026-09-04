@@ -16,7 +16,7 @@ ENERGY 3 / RHYTHM 2 / MOTION 1. A bold food diary for daily use, with a large ca
 - The cream light theme and burgundy dark theme share the same geometry. Profile > Appearance > Theme offers Light, Dark and System; System is the default. The red-and-white meat illustration keeps its fixed colors in both appearances.
 - Red is concentrated in the calorie summary, brand, selected navigation and primary actions; details sit on cream or white.
 - Forms retain native editing, validation and pickers. Onboarding no longer shows an inert imperial-unit toggle; its metric behavior is stated explicitly, with units editable later in Profile.
-- Navigation labels cap at XXXL to keep all three destinations available. At accessibility text sizes, the calorie summary and macro labels switch to vertical layouts rather than squeeze inside illustration geometry.
+- Navigation uses the native iOS 26 Liquid Glass tab bar with Diary, Add food and Profile, retaining the adaptive red selection tint. The opaque custom panel and its top divider are removed; tab sizing and accessibility are managed by the system. At accessibility text sizes, the calorie summary and macro labels switch to vertical layouts rather than squeeze inside illustration geometry.
 - New button and progress animations respect Reduce Motion. No ornamental continuous animation was added.
 
 ## References and documentation
