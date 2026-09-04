@@ -104,7 +104,11 @@ final class AddViewModel {
 struct AddView: View {
     @State private var vm = AddViewModel()
     @State private var cameraStatus: AVAuthorizationStatus = CameraPermission.status
-    @State private var panelExpanded = ProcessInfo.processInfo.arguments.contains("-uitest-expand-search")
+    @State private var panelProgress: CGFloat = ProcessInfo.processInfo.arguments.contains("-uitest-expand-search") ? 1 : 0
+    @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.3, bounce: 0.12)))
+    private var panelDragTranslation: CGFloat = 0
+    @ScaledMetric(relativeTo: .headline) private var panelHeaderHeight: CGFloat = 44
+    @ScaledMetric(relativeTo: .body) private var searchControlHeight: CGFloat = 52
     @State private var scannerGuideFrame: CGRect = .zero
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -174,7 +178,7 @@ struct AddView: View {
             }
         }
         .onChange(of: searchFocused) { _, focused in
-            if focused { panelExpanded = true }
+            if focused { setPanelProgress(1) }
         }
         .sheet(item: $vm.selectedProduct) { product in
             PortionPickerSheet(product: product)
@@ -247,51 +251,93 @@ struct AddView: View {
     }
 
     private func searchMenu(maxHeight: CGFloat) -> some View {
-        let expandedHeight = maxHeight * 0.58
-        let collapsedHeight: CGFloat = 120
+        let collapsedHeight = min(maxHeight, panelHeaderHeight + searchControlHeight + 36)
+        let expandedHeight = max(collapsedHeight, maxHeight * 0.78)
+        let travel = expandedHeight - collapsedHeight
+        let offset = SearchPanelAnchors.displayOffset(
+            travel * panelProgress - panelDragTranslation, travel: travel)
+        let height = collapsedHeight + max(0, offset)
+        let isOpen = height > collapsedHeight + 1
+        let panelShape = ConcentricRectangle(
+            uniformTopCorners: .concentric(minimum: .fixed(Layout.largeCornerRadius)),
+            uniformBottomCorners: .concentric
+        )
 
         return VStack(spacing: 0) {
             Button(action: togglePanel) {
-                HStack {
-                    Text("Find your food").font(.headline.weight(.heavy))
-                    Spacer()
-                    Image(systemName: panelExpanded ? "chevron.down" : "chevron.up")
-                        .font(.subheadline.weight(.heavy))
+                VStack(spacing: 8) {
+                    Capsule()
+                        .fill(Theme.muted.opacity(0.5))
+                        .frame(width: 36, height: 4)
+                        .accessibilityHidden(true)
+                    HStack {
+                        Text("Find your food").font(.headline.weight(.heavy))
+                        Spacer()
+                        Image(systemName: isOpen ? "chevron.down" : "chevron.up")
+                            .font(.subheadline.weight(.heavy))
+                    }
+                    .frame(minHeight: panelHeaderHeight)
                 }
                 .foregroundStyle(Theme.ink)
                 .padding(.horizontal, 20)
-                .frame(minHeight: 44)
+                .padding(.top, 8)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(panelExpanded ? "Collapse food search" : "Expand food search")
+            .accessibilityLabel(isOpen ? "Collapse food search" : "Expand food search")
+            .accessibilityValue("\(Int(panelProgress * 100)) percent expanded")
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: setPanelProgress(min(1, panelProgress + 0.25))
+                case .decrement:
+                    let progress = max(0, panelProgress - 0.25)
+                    if progress == 0 { searchFocused = false }
+                    setPanelProgress(progress)
+                @unknown default: break
+                }
+            }
+            .highPriorityGesture(panelDrag(travel: travel))
 
             searchBar
                 .padding(.horizontal, Layout.large)
 
-            if panelExpanded {
-                menuContent
-                    .transition(.opacity)
-            }
+            menuContent
+                .frame(maxHeight: .infinity)
+                .clipped()
+                .allowsHitTesting(isOpen)
+                .accessibilityHidden(!isOpen)
         }
+        .padding(.bottom, Layout.large)
         .frame(maxWidth: .infinity)
-        .frame(height: panelExpanded ? expandedHeight : collapsedHeight, alignment: .top)
+        .frame(height: height, alignment: .top)
+        .clipped()
         .background {
-            Theme.paper
-                .steakPanel(fill: Theme.paper, radius: 28)
+            Color.clear
+                .glassEffect(.regular, in: panelShape)
                 .ignoresSafeArea(.container, edges: .bottom)
         }
-        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: panelExpanded)
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 12)
-                .onEnded { value in
-                    if value.translation.height < -20 && !panelExpanded {
-                        panelExpanded = true
-                    } else if value.translation.height > 20 && panelExpanded {
-                        collapsePanel()
-                    }
+        .offset(y: max(0, -offset))
+        .transaction { transaction in
+            if reduceMotion { transaction.animation = nil }
+        }
+    }
+
+    private func panelDrag(travel: CGFloat) -> some Gesture {
+        // Global coordinates keep the drag stable while the header itself moves.
+        DragGesture(minimumDistance: 4, coordinateSpace: .global)
+            .updating($panelDragTranslation) { value, translation, transaction in
+                transaction.animation = nil
+                translation = value.translation.height
+            }
+            .onEnded { value in
+                guard travel > 0 else { return }
+                let progress = SearchPanelAnchors.restingProgress(
+                    panelProgress * travel - value.translation.height, travel: travel)
+                withAnimation(reduceMotion ? nil : .spring(duration: 0.3, bounce: 0.12)) {
+                    panelProgress = progress
                 }
-        )
+                if panelProgress == 0 { searchFocused = false }
+            }
     }
 
     private var searchBar: some View {
@@ -322,7 +368,7 @@ struct AddView: View {
             .accessibilityLabel("Add food manually")
         }
         .padding(.horizontal, Layout.medium)
-        .frame(minHeight: 52)
+        .frame(minHeight: searchControlHeight)
         .steakPanel(radius: 14)
     }
 
@@ -358,16 +404,22 @@ struct AddView: View {
     }
 
     private func togglePanel() {
-        if panelExpanded {
+        if panelProgress > 0 {
             collapsePanel()
         } else {
-            panelExpanded = true
+            setPanelProgress(1)
         }
     }
 
     private func collapsePanel() {
         searchFocused = false
-        panelExpanded = false
+        setPanelProgress(0)
+    }
+
+    private func setPanelProgress(_ progress: CGFloat) {
+        withAnimation(reduceMotion ? nil : .smooth(duration: 0.35)) {
+            panelProgress = progress
+        }
     }
 
     // MARK: - Permission states
@@ -436,6 +488,35 @@ struct AddView: View {
         default:
             cameraStatus = .denied
         }
+    }
+}
+
+private enum SearchPanelAnchors {
+    static func displayOffset(_ offset: CGFloat, travel: CGFloat) -> CGFloat {
+        guard travel > 0 else { return 0 }
+        if offset < 0 { return -resistedDistance(-offset) }
+        if offset > travel { return travel + resistedDistance(offset - travel) }
+
+        let range = min(24, travel / 4)
+        let distance = min(offset, travel - offset)
+        guard distance < range else { return offset }
+        let fraction = distance / range
+        // Ease into each anchor without changing movement in the middle of the panel's travel.
+        let attractedDistance = range * fraction * fraction * (2 - fraction)
+        return offset < travel / 2 ? attractedDistance : travel - attractedDistance
+    }
+
+    static func restingProgress(_ offset: CGFloat, travel: CGFloat) -> CGFloat {
+        guard travel > 0 else { return 0 }
+        let range = min(24, travel / 4)
+        if offset <= range { return 0 }
+        if offset >= travel - range { return 1 }
+        return offset / travel
+    }
+
+    private static func resistedDistance(_ distance: CGFloat) -> CGFloat {
+        // Overpull approaches 12 points, even when the finger travels far past an anchor.
+        12 * (distance / (distance + 48))
     }
 }
 
