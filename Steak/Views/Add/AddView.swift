@@ -378,7 +378,7 @@ struct AddView: View {
                 Image(systemName: "camera.fill")
                     .font(.system(size: 40))
                     .padding(Layout.xxLarge)
-                    .foregroundStyle(Color.steakAccent)
+                    .foregroundStyle(Color.steakTint)
                     .steakPanel(fill: Theme.blush, radius: 24, raised: true)
                 Text("Camera access needed")
                     .font(.title3.weight(.semibold))
@@ -391,7 +391,7 @@ struct AddView: View {
                     }
                 }
                 .buttonStyle(SteakButtonStyle())
-                .tint(.steakAccent)
+                .tint(.steakTint)
             }
         }
         .padding(.horizontal, 24)
@@ -405,7 +405,7 @@ struct AddView: View {
                 Image(systemName: "video.slash.fill")
                     .font(.system(size: 40))
                     .padding(Layout.xxLarge)
-                    .foregroundStyle(Color.steakAccent)
+                    .foregroundStyle(Color.steakTint)
                     .steakPanel(fill: Theme.blush, radius: 24, raised: true)
                 Text("Camera unavailable")
                     .font(.title3.weight(.semibold))
@@ -417,7 +417,7 @@ struct AddView: View {
                     CameraPermission.openSettings()
                 }
                 .buttonStyle(SteakButtonStyle())
-                .tint(.steakAccent)
+                .tint(.steakTint)
             }
         }
         .padding(.horizontal, 24)

@@ -41,12 +41,12 @@ struct CalorieRing: View {
 
     private var calorieCut: some View {
         ZStack {
-            SteakCut().fill(Theme.ink).offset(y: 6)
-            SteakCut().fill(Theme.paper)
+            SteakCut().fill(Theme.cutInk).offset(y: 6)
+            SteakCut().fill(Theme.cutPaper)
             SteakCut().stroke(.white, lineWidth: 14)
             SteakCut()
                 .trim(from: 0, to: progress)
-                .stroke(Theme.ink, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                .stroke(Theme.cutInk, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                 .animation(reduceMotion ? nil : .smooth(duration: 0.5), value: progress)
 
             VStack(spacing: 0) {
@@ -59,7 +59,7 @@ struct CalorieRing: View {
                 Text(isOver ? "kcal over target" : "kcal left today")
                     .font(.subheadline.weight(.bold))
             }
-            .foregroundStyle(Theme.ink)
+            .foregroundStyle(Theme.cutInk)
             .padding(.horizontal, 48)
         }
         .padding(10)
@@ -98,7 +98,7 @@ struct MacroBar: View {
                             .fill(color)
                             .frame(width: geometry.size.width * progress)
                     }
-                    .overlay { RoundedRectangle(cornerRadius: 4).strokeBorder(Theme.ink, lineWidth: 1.5) }
+                    .overlay { RoundedRectangle(cornerRadius: 4).strokeBorder(Theme.outline, lineWidth: 1.5) }
             }
             .frame(height: 13)
             .animation(reduceMotion ? nil : .smooth(duration: 0.5), value: progress)

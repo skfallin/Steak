@@ -3,6 +3,7 @@ import SwiftData
 
 @main
 struct SteakApp: App {
+    @AppStorage(AppAppearance.storageKey) private var appearance: AppAppearance = .system
     let container: ModelContainer
 
     init() {
@@ -17,8 +18,8 @@ struct SteakApp: App {
         WindowGroup {
             RootView()
                 .modelContainer(container)
-                .tint(.steakAccent)
-                .preferredColorScheme(.light)
+                .tint(.steakTint)
+                .preferredColorScheme(appearance.colorScheme)
                 .fontDesign(.rounded)
                 .foregroundStyle(Theme.ink)
         }
@@ -121,7 +122,7 @@ struct MainTabView: View {
             .padding(.top, 12)
             .padding(.bottom, 8)
             .background(Theme.paper)
-            .overlay(alignment: .top) { Rectangle().fill(Theme.ink).frame(height: 2) }
+            .overlay(alignment: .top) { Rectangle().fill(Theme.outline).frame(height: 2) }
         }
     }
 

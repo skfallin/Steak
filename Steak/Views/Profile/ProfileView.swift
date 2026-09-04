@@ -3,6 +3,7 @@ import SwiftData
 
 struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
+    @AppStorage(AppAppearance.storageKey) private var appearance: AppAppearance = .system
     @Query private var profiles: [UserProfile]
     @Query private var allEntries: [FoodEntry]
 
@@ -26,7 +27,7 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("Your recipe")
-            .tint(.steakAccent)
+            .tint(.steakTint)
         }
     }
 
@@ -47,6 +48,7 @@ struct ProfileView: View {
                 .padding(.vertical, 14)
             }
             .listRowBackground(Color.steakAccent)
+            appearanceSection
             profileSection(profile)
             planSection(profile)
             unitsSection(profile)
@@ -58,6 +60,21 @@ struct ProfileView: View {
     }
 
     // MARK: - Sections
+
+    private var appearanceSection: some View {
+        Section {
+            Picker("Theme", selection: $appearance) {
+                ForEach(AppAppearance.allCases) { option in
+                    Text(option.label).tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+        } header: {
+            Text("Appearance")
+        } footer: {
+            Text("System follows your device's appearance.")
+        }
+    }
 
     private func profileSection(_ profile: UserProfile) -> some View {
         Section("Profile") {

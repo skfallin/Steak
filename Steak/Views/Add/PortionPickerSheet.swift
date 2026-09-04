@@ -102,7 +102,6 @@ struct PortionPickerSheet: View {
                 }
             }
         }
-        .preferredColorScheme(.light)
         .onAppear {
             let initial = product.servingQuantityGrams.flatMap { NutritionSafety.isValidServingGrams($0) ? $0 : nil } ?? 100
             gramsText = initial.gramsText

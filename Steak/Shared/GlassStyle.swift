@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum Layout {
     static let xSmall: CGFloat = 4
@@ -21,31 +22,71 @@ struct AtmosphericBackground: View {
 }
 
 struct Theme {
-    static let paper = Color(red: 1, green: 0.96, blue: 0.89)
-    static let ink = Color(red: 0.25, green: 0.055, blue: 0.075)
-    static let muted = Color(red: 0.46, green: 0.29, blue: 0.28)
-    static let blush = Color(red: 1, green: 0.83, blue: 0.80)
-    static let accentGradient = Color.steakAccent
-    static let proteinColor = Color.steakAccent
+    static let paper = adaptive(
+        light: UIColor(red: 1, green: 0.96, blue: 0.89, alpha: 1),
+        dark: UIColor(red: 0.10, green: 0.055, blue: 0.065, alpha: 1)
+    )
+    static let surface = adaptive(
+        light: .white,
+        dark: UIColor(red: 0.17, green: 0.105, blue: 0.12, alpha: 1)
+    )
+    static let ink = adaptive(
+        light: UIColor(red: 0.25, green: 0.055, blue: 0.075, alpha: 1),
+        dark: UIColor(red: 1, green: 0.96, blue: 0.89, alpha: 1)
+    )
+    static let muted = adaptive(
+        light: UIColor(red: 0.46, green: 0.29, blue: 0.28, alpha: 1),
+        dark: UIColor(red: 0.81, green: 0.67, blue: 0.65, alpha: 1)
+    )
+    static let blush = adaptive(
+        light: UIColor(red: 1, green: 0.83, blue: 0.80, alpha: 1),
+        dark: UIColor(red: 0.28, green: 0.12, blue: 0.15, alpha: 1)
+    )
+    static let outline = adaptive(
+        light: UIColor(red: 0.25, green: 0.055, blue: 0.075, alpha: 1),
+        dark: UIColor(red: 0.58, green: 0.37, blue: 0.38, alpha: 1)
+    )
+    // Illustration colors stay fixed so the meat keeps its red-and-white identity.
+    static let cutPaper = Color(red: 1, green: 0.96, blue: 0.89)
+    static let cutInk = Color(red: 0.25, green: 0.055, blue: 0.075)
+    static let shadow = adaptive(
+        light: UIColor(red: 0.25, green: 0.055, blue: 0.075, alpha: 1),
+        dark: UIColor(red: 0.035, green: 0.015, blue: 0.02, alpha: 1)
+    )
+    static let accentGradient = Color.steakTint
+    static let proteinColor = Color.steakTint
     static let carbsColor = ink
-    static let fatColor = Color(red: 0.66, green: 0.31, blue: 0.25)
+    static let fatColor = adaptive(
+        light: UIColor(red: 0.66, green: 0.31, blue: 0.25, alpha: 1),
+        dark: UIColor(red: 0.94, green: 0.62, blue: 0.49, alpha: 1)
+    )
+
+    static func adaptive(light: UIColor, dark: UIColor) -> Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark ? dark : light
+        })
+    }
 }
 
 extension Color {
     static let steakAccent = Color(red: 0.80, green: 0.105, blue: 0.17)
+    static let steakTint = Theme.adaptive(
+        light: UIColor(red: 0.80, green: 0.105, blue: 0.17, alpha: 1),
+        dark: UIColor(red: 1, green: 0.43, blue: 0.46, alpha: 1)
+    )
 }
 
 extension View {
-    func steakPanel(fill: Color = .white, radius: CGFloat = 24, raised: Bool = false) -> some View {
+    func steakPanel(fill: Color = Theme.surface, radius: CGFloat = 24, raised: Bool = false) -> some View {
         background(fill, in: RoundedRectangle(cornerRadius: radius))
             .overlay {
                 RoundedRectangle(cornerRadius: radius)
-                    .strokeBorder(Theme.ink, lineWidth: 2)
+                    .strokeBorder(Theme.outline, lineWidth: 2)
             }
             .background {
                 if raised {
                     RoundedRectangle(cornerRadius: radius)
-                        .fill(Theme.ink)
+                        .fill(Theme.shadow)
                         .offset(x: 0, y: 5)
                 }
             }
@@ -55,7 +96,7 @@ extension View {
         scrollContentBackground(.hidden)
             .background(Theme.paper)
             .fontDesign(.rounded)
-            .tint(.steakAccent)
+            .tint(.steakTint)
     }
 }
 
@@ -70,7 +111,7 @@ struct SteakButtonStyle: ButtonStyle {
             .padding(.horizontal, 18)
             .frame(minHeight: 48)
             .foregroundStyle(prominent ? Color.white : Theme.ink)
-            .steakPanel(fill: prominent ? .steakAccent : .white, radius: 16, raised: !configuration.isPressed)
+            .steakPanel(fill: prominent ? .steakAccent : Theme.surface, radius: 16, raised: !configuration.isPressed)
             .offset(y: configuration.isPressed ? 3 : 0)
             .opacity(isEnabled ? 1 : 0.45)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: configuration.isPressed)
@@ -97,7 +138,7 @@ struct SteakIllustration: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                SteakCut().fill(Theme.ink).offset(y: 7)
+                SteakCut().fill(Theme.shadow).offset(y: 7)
                 SteakCut().fill(Color.steakAccent)
                 SteakCut().stroke(.white, lineWidth: 9)
                 Path { path in
@@ -109,7 +150,7 @@ struct SteakIllustration: View {
                     path.addQuadCurve(to: CGPoint(x: 0.83, y: 0.68), control: CGPoint(x: 0.65, y: 0.77))
                 }
                 .transform(CGAffineTransform(scaleX: geometry.size.width, y: geometry.size.height))
-                .stroke(Theme.paper, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                .stroke(Theme.cutPaper, style: StrokeStyle(lineWidth: 6, lineCap: .round))
             }
         }
         .aspectRatio(1.25, contentMode: .fit)

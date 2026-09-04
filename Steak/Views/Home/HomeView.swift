@@ -72,7 +72,7 @@ struct HomeView: View {
                 Text("steak.")
                     .font(.system(size: 48, weight: .black, design: .rounded))
                     .tracking(-3)
-                    .foregroundStyle(Color.steakAccent)
+                    .foregroundStyle(Color.steakTint)
                 Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Theme.muted)
@@ -203,7 +203,7 @@ struct HomeView: View {
                     .font(.subheadline.weight(.semibold))
             }
             .buttonStyle(SteakButtonStyle())
-            .tint(.steakAccent)
+            .tint(.steakTint)
             .padding(.top, Layout.small)
         }
         .frame(maxWidth: .infinity)
@@ -216,7 +216,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: Layout.small) {
             Label(meal.label, systemImage: meal.icon)
                 .font(.subheadline.weight(.heavy))
-                .foregroundStyle(Color.steakAccent)
+                .foregroundStyle(Color.steakTint)
                 .padding(.leading, 4)
 
             VStack(spacing: Layout.small) {
@@ -338,7 +338,7 @@ private struct FoodEntrySwipeRow<Content: View>: View {
             actionButton(
                 title: "Edit",
                 icon: "pencil",
-                color: .steakAccent,
+                color: .steakTint,
                 action: onEdit
             )
             actionButton(

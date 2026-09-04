@@ -144,7 +144,6 @@ struct EditFoodEntrySheet: View {
                 }
             }
         }
-        .preferredColorScheme(.light)
         .alert("Couldn't save food", isPresented: Binding(
             get: { saveError != nil },
             set: { if !$0 { saveError = nil } }

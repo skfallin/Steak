@@ -72,7 +72,7 @@ struct OnboardingView: View {
             Text("steak.")
                 .font(.system(size: 80, weight: .black, design: .rounded))
                 .tracking(-5)
-                .foregroundStyle(Color.steakAccent)
+                .foregroundStyle(Color.steakTint)
 
             Text("Track what you eat.\nHit your goals.")
                 .font(.title3.weight(.bold))
@@ -216,7 +216,7 @@ struct OnboardingView: View {
                         .frame(height: 56)
                 }
                 .buttonStyle(SteakButtonStyle())
-                .tint(.steakAccent)
+                .tint(.steakTint)
                 .disabled(!canAdvance)
             }
         }
@@ -228,7 +228,7 @@ struct OnboardingView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .frame(height: 64)
-                .steakPanel(fill: selected ? Theme.blush : .white, radius: 16)
+                .steakPanel(fill: selected ? Theme.blush : Theme.surface, radius: 16)
                 .overlay {
                     if selected {
                         RoundedRectangle(cornerRadius: Layout.mediumCornerRadius)
@@ -253,7 +253,7 @@ struct OnboardingView: View {
                     .foregroundStyle(selected ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Color.secondary))
             }
             .padding(Layout.large)
-            .steakPanel(fill: selected ? Theme.blush : .white, radius: 16)
+            .steakPanel(fill: selected ? Theme.blush : Theme.surface, radius: 16)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
