@@ -18,7 +18,9 @@ struct SteakApp: App {
             RootView()
                 .modelContainer(container)
                 .tint(.steakAccent)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
+                .fontDesign(.rounded)
+                .foregroundStyle(Theme.ink)
         }
     }
 }
@@ -107,5 +109,33 @@ struct MainTabView: View {
                 .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
                 .tag(AppTab.profile)
         }
+        .toolbar(.hidden, for: .tabBar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            HStack(spacing: 12) {
+                tabButton(.home, title: "Diary", icon: "fork.knife")
+                tabButton(.add, title: "Add food", icon: "plus")
+                tabButton(.profile, title: "Profile", icon: "person.crop.circle")
+            }
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            .background(Theme.paper)
+            .overlay(alignment: .top) { Rectangle().fill(Theme.ink).frame(height: 2) }
+        }
+    }
+
+    private func tabButton(_ tab: AppTab, title: String, icon: String) -> some View {
+        Button { selection = tab } label: {
+            VStack(spacing: 4) {
+                Image(systemName: icon).font(.title3.weight(.heavy))
+                Text(title).font(.caption.weight(.bold))
+            }
+            .frame(maxWidth: .infinity, minHeight: 54)
+            .foregroundStyle(selection == tab ? Color.white : Theme.ink)
+            .background(selection == tab ? Color.steakAccent : .clear, in: RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selection == tab ? .isSelected : [])
     }
 }

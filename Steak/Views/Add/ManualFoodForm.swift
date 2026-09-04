@@ -68,6 +68,7 @@ struct ManualFoodForm: View {
                     .pickerStyle(.menu)
                 }
             }
+            .steakForm()
             .scrollDismissesKeyboard(.immediately)
             .navigationTitle("New food")
             .navigationBarTitleDisplayMode(.inline)
@@ -82,7 +83,7 @@ struct ManualFoodForm: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .alert("Couldn't save food", isPresented: Binding(
             get: { saveError != nil },
             set: { if !$0 { saveError = nil } }

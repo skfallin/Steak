@@ -107,12 +107,17 @@ struct AddView: View {
     @State private var panelExpanded = ProcessInfo.processInfo.arguments.contains("-uitest-expand-search")
     @State private var scannerGuideFrame: CGRect = .zero
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var searchFocused: Bool
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .bottom) {
-                Color.black.ignoresSafeArea()
+                if cameraStatus == .authorized {
+                    Color.black.ignoresSafeArea()
+                } else {
+                    AtmosphericBackground()
+                }
 
                 switch cameraStatus {
                 case .authorized:
@@ -140,14 +145,20 @@ struct AddView: View {
 
                 VStack {
                     HStack {
-                        Text("Scan")
-                            .font(.title2.weight(.bold))
+                        Text("Scan & snack")
+                            .font(.largeTitle.weight(.black))
+                            .foregroundStyle(cameraStatus == .authorized ? Color.white : Theme.ink)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(cameraStatus == .authorized ? Color.steakAccent : .clear, in: RoundedRectangle(cornerRadius: 16))
                         Spacer()
                         if cameraStatus == .authorized {
                             TorchButton()
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Layout.xLarge)
+                    .padding(.bottom, 12)
+                    .background(Theme.paper.ignoresSafeArea(edges: .top))
                     Spacer()
                 }
 
@@ -199,8 +210,10 @@ struct AddView: View {
     private var scannerGuide: some View {
         VStack(spacing: 14) {
             RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(.white.opacity(0.9), lineWidth: 2)
-                .frame(width: 320, height: 118)
+                .strokeBorder(.white, lineWidth: 5)
+                .frame(maxWidth: 320)
+                .frame(height: 118)
+                .padding(.horizontal, 24)
                 .onGeometryChange(for: CGRect.self, of: { proxy in
                     proxy.frame(in: .global)
                 }) { frame in
@@ -238,16 +251,22 @@ struct AddView: View {
         let collapsedHeight: CGFloat = 120
 
         return VStack(spacing: 0) {
-            Capsule()
-                .fill(.white.opacity(0.35))
-                .frame(width: 40, height: 5)
-                .padding(.top, 10)
-                .padding(.bottom, 6)
-                .contentShape(Rectangle())
-                .onTapGesture { togglePanel() }
+            Button(action: togglePanel) {
+                HStack {
+                    Text("Find your food").font(.headline.weight(.heavy))
+                    Spacer()
+                    Image(systemName: panelExpanded ? "chevron.down" : "chevron.up")
+                        .font(.subheadline.weight(.heavy))
+                }
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, 20)
+                .frame(minHeight: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(panelExpanded ? "Collapse food search" : "Expand food search")
 
             searchBar
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Layout.large)
 
             if panelExpanded {
                 menuContent
@@ -257,14 +276,11 @@ struct AddView: View {
         .frame(maxWidth: .infinity)
         .frame(height: panelExpanded ? expandedHeight : collapsedHeight, alignment: .top)
         .background {
-            Color.clear
-                .glassEffect(
-                    .regular,
-                    in: ConcentricRectangle(corners: .concentric(minimum: .fixed(32)))
-                )
+            Theme.paper
+                .steakPanel(fill: Theme.paper, radius: 28)
                 .ignoresSafeArea(.container, edges: .bottom)
         }
-        .animation(.smooth(duration: 0.35), value: panelExpanded)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: panelExpanded)
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 12)
@@ -282,7 +298,7 @@ struct AddView: View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("Search Open Food Facts…", text: Bindable(vm).searchText)
+            TextField("Search food…", text: Bindable(vm).searchText)
                 .focused($searchFocused)
                 .submitLabel(.search)
                 .onSubmit(vm.submitSearch)
@@ -292,24 +308,28 @@ struct AddView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
+                        .frame(minWidth: 44, minHeight: 44)
                 }
+                .accessibilityLabel("Clear search")
             }
             Button {
                 vm.showManualForm = true
             } label: {
                 Image(systemName: "square.and.pencil")
                     .font(.body.weight(.semibold))
+                    .frame(minWidth: 44, minHeight: 44)
             }
+            .accessibilityLabel("Add food manually")
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
-        .background(.quinary.opacity(0.6), in: .rect(cornerRadius: 16))
+        .padding(.horizontal, Layout.medium)
+        .frame(minHeight: 52)
+        .steakPanel(radius: 14)
     }
 
     @ViewBuilder
     private var menuContent: some View {
         ScrollView {
-            LazyVStack(spacing: 8) {
+            LazyVStack(spacing: Layout.small) {
                 if vm.isSearching && vm.results.isEmpty {
                     ProgressView()
                         .padding(.vertical, 28)
@@ -317,7 +337,7 @@ struct AddView: View {
                     VStack(spacing: 8) {
                         Text(vm.searchError ?? "Point the camera at a barcode,\nor type to search foods.")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.muted)
                             .multilineTextAlignment(.center)
                     }
                     .padding(.vertical, 26)
@@ -331,8 +351,8 @@ struct AddView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Layout.large)
+            .padding(.vertical, Layout.medium)
         }
         .scrollDismissesKeyboard(.immediately)
     }
@@ -353,43 +373,55 @@ struct AddView: View {
     // MARK: - Permission states
 
     private var permissionPrompt: some View {
-        VStack(spacing: 18) {
-            Image(systemName: "camera.fill")
-                .font(.system(size: 40))
-                .padding(24)
-                .glassEffect(.regular, in: .circle)
-            Text("Camera access needed")
-                .font(.title3.weight(.semibold))
-            Text("Allow camera access to scan barcodes.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Button("Allow camera") {
-                CameraPermission.request { granted in
-                    cameraStatus = granted ? .authorized : .denied
+        Group {
+            VStack(spacing: Layout.xLarge) {
+                Image(systemName: "camera.fill")
+                    .font(.system(size: 40))
+                    .padding(Layout.xxLarge)
+                    .foregroundStyle(Color.steakAccent)
+                    .steakPanel(fill: Theme.blush, radius: 24, raised: true)
+                Text("Camera access needed")
+                    .font(.title3.weight(.semibold))
+                Text("Allow camera access to scan barcodes.")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.muted)
+                Button("Allow camera") {
+                    CameraPermission.request { granted in
+                        cameraStatus = granted ? .authorized : .denied
+                    }
                 }
+                .buttonStyle(SteakButtonStyle())
+                .tint(.steakAccent)
             }
-            .buttonStyle(.borderedProminent)
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 140)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var deniedView: some View {
-        VStack(spacing: 18) {
-            Image(systemName: "video.slash.fill")
-                .font(.system(size: 40))
-                .padding(24)
-                .glassEffect(.regular, in: .circle)
-            Text("Camera unavailable")
-                .font(.title3.weight(.semibold))
-            Text("Steak needs the camera to scan barcodes.\nEnable it in Settings to continue.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Open Settings") {
-                CameraPermission.openSettings()
+        Group {
+            VStack(spacing: Layout.xLarge) {
+                Image(systemName: "video.slash.fill")
+                    .font(.system(size: 40))
+                    .padding(Layout.xxLarge)
+                    .foregroundStyle(Color.steakAccent)
+                    .steakPanel(fill: Theme.blush, radius: 24, raised: true)
+                Text("Camera unavailable")
+                    .font(.title3.weight(.semibold))
+                Text("Steak needs the camera to scan barcodes.\nEnable it in Settings to continue.")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.muted)
+                    .multilineTextAlignment(.center)
+                Button("Open Settings") {
+                    CameraPermission.openSettings()
+                }
+                .buttonStyle(SteakButtonStyle())
+                .tint(.steakAccent)
             }
-            .buttonStyle(.borderedProminent)
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 140)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -415,7 +447,7 @@ struct SearchResultRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: Layout.medium) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(product.name)
                         .font(.body.weight(.medium))
@@ -442,9 +474,9 @@ struct SearchResultRow: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(.quinary.opacity(0.5), in: .rect(cornerRadius: 16))
+            .padding(.horizontal, Layout.medium)
+            .padding(.vertical, Layout.medium)
+            .steakPanel(radius: 14)
         }
         .buttonStyle(.plain)
     }

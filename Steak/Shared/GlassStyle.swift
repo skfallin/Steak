@@ -1,37 +1,118 @@
 import SwiftUI
 
-/// Reusable Liquid Glass styling helpers.
-
-struct GlassCard: ViewModifier {
-    var cornerRadius: CGFloat = 28
-
-    func body(content: Content) -> some View {
-        content
-            .padding(20)
-            .glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
-    }
+enum Layout {
+    static let xSmall: CGFloat = 4
+    static let small: CGFloat = 8
+    static let medium: CGFloat = 12
+    static let large: CGFloat = 16
+    static let xLarge: CGFloat = 20
+    static let xxLarge: CGFloat = 24
+    static let section: CGFloat = 32
+    static let smallCornerRadius: CGFloat = 16
+    static let mediumCornerRadius: CGFloat = 20
+    static let largeCornerRadius: CGFloat = 28
+    static let heroCornerRadius: CGFloat = 32
 }
 
-extension View {
-    func glassCard(cornerRadius: CGFloat = 28) -> some View {
-        modifier(GlassCard(cornerRadius: cornerRadius))
+struct AtmosphericBackground: View {
+    var body: some View {
+        Theme.paper.ignoresSafeArea()
     }
 }
 
 struct Theme {
-    /// Warm steak-house gradient used for rings and accents.
-    static let accentGradient = LinearGradient(
-        colors: [Color(red: 1.0, green: 0.42, blue: 0.21),
-                 Color(red: 1.0, green: 0.68, blue: 0.25)],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    static let proteinColor = Color(red: 0.35, green: 0.78, blue: 0.72)
-    static let carbsColor = Color(red: 0.55, green: 0.62, blue: 1.0)
-    static let fatColor = Color(red: 1.0, green: 0.55, blue: 0.45)
+    static let paper = Color(red: 1, green: 0.96, blue: 0.89)
+    static let ink = Color(red: 0.25, green: 0.055, blue: 0.075)
+    static let muted = Color(red: 0.46, green: 0.29, blue: 0.28)
+    static let blush = Color(red: 1, green: 0.83, blue: 0.80)
+    static let accentGradient = Color.steakAccent
+    static let proteinColor = Color.steakAccent
+    static let carbsColor = ink
+    static let fatColor = Color(red: 0.66, green: 0.31, blue: 0.25)
 }
 
 extension Color {
-    static let steakAccent = Color(red: 1.0, green: 0.52, blue: 0.23)
+    static let steakAccent = Color(red: 0.80, green: 0.105, blue: 0.17)
+}
+
+extension View {
+    func steakPanel(fill: Color = .white, radius: CGFloat = 24, raised: Bool = false) -> some View {
+        background(fill, in: RoundedRectangle(cornerRadius: radius))
+            .overlay {
+                RoundedRectangle(cornerRadius: radius)
+                    .strokeBorder(Theme.ink, lineWidth: 2)
+            }
+            .background {
+                if raised {
+                    RoundedRectangle(cornerRadius: radius)
+                        .fill(Theme.ink)
+                        .offset(x: 0, y: 5)
+                }
+            }
+    }
+
+    func steakForm() -> some View {
+        scrollContentBackground(.hidden)
+            .background(Theme.paper)
+            .fontDesign(.rounded)
+            .tint(.steakAccent)
+    }
+}
+
+struct SteakButtonStyle: ButtonStyle {
+    var prominent = true
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline.weight(.heavy))
+            .padding(.horizontal, 18)
+            .frame(minHeight: 48)
+            .foregroundStyle(prominent ? Color.white : Theme.ink)
+            .steakPanel(fill: prominent ? .steakAccent : .white, radius: 16, raised: !configuration.isPressed)
+            .offset(y: configuration.isPressed ? 3 : 0)
+            .opacity(isEnabled ? 1 : 0.45)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+// The asymmetric silhouette echoes the cut of meat in the app icon.
+struct SteakCut: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: 0.15, y: 0.30))
+        path.addCurve(to: CGPoint(x: 0.59, y: 0.07), control1: CGPoint(x: 0.25, y: 0.14), control2: CGPoint(x: 0.38, y: 0.09))
+        path.addCurve(to: CGPoint(x: 0.92, y: 0.30), control1: CGPoint(x: 0.83, y: 0.01), control2: CGPoint(x: 0.95, y: 0.10))
+        path.addCurve(to: CGPoint(x: 0.78, y: 0.79), control1: CGPoint(x: 0.87, y: 0.45), control2: CGPoint(x: 0.99, y: 0.59))
+        path.addCurve(to: CGPoint(x: 0.25, y: 0.93), control1: CGPoint(x: 0.60, y: 0.98), control2: CGPoint(x: 0.36, y: 0.99))
+        path.addCurve(to: CGPoint(x: 0.15, y: 0.30), control1: CGPoint(x: -0.03, y: 0.87), control2: CGPoint(x: 0.03, y: 0.48))
+        path.closeSubpath()
+        return path.applying(CGAffineTransform(scaleX: rect.width, y: rect.height))
+            .applying(CGAffineTransform(translationX: rect.minX, y: rect.minY))
+    }
+}
+
+struct SteakIllustration: View {
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                SteakCut().fill(Theme.ink).offset(y: 7)
+                SteakCut().fill(Color.steakAccent)
+                SteakCut().stroke(.white, lineWidth: 9)
+                Path { path in
+                    path.move(to: CGPoint(x: 0.13, y: 0.55))
+                    path.addCurve(to: CGPoint(x: 0.85, y: 0.24), control1: CGPoint(x: 0.57, y: 0.17), control2: CGPoint(x: 0.53, y: 0.73))
+                    path.move(to: CGPoint(x: 0.34, y: 0.38))
+                    path.addQuadCurve(to: CGPoint(x: 0.32, y: 0.88), control: CGPoint(x: 0.63, y: 0.69))
+                    path.move(to: CGPoint(x: 0.53, y: 0.59))
+                    path.addQuadCurve(to: CGPoint(x: 0.83, y: 0.68), control: CGPoint(x: 0.65, y: 0.77))
+                }
+                .transform(CGAffineTransform(scaleX: geometry.size.width, y: geometry.size.height))
+                .stroke(Theme.paper, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+            }
+        }
+        .aspectRatio(1.25, contentMode: .fit)
+        .accessibilityHidden(true)
+    }
 }

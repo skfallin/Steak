@@ -3,6 +3,7 @@ import SwiftData
 
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var step = 0
     @State private var name = ""
@@ -22,9 +23,9 @@ struct OnboardingView: View {
 
             VStack(spacing: 0) {
                 progressBar
-                    .padding(.top, 16)
+                    .padding(.top, Layout.large)
 
-                Group {
+                ScrollView {
                     switch step {
                     case 0: welcomeStep
                     case 1: nameStep
@@ -39,11 +40,11 @@ struct OnboardingView: View {
                 .transition(.opacity.combined(with: .move(edge: .trailing)))
 
                 navButtons
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
+                    .padding(.horizontal, Layout.xxLarge)
+                    .padding(.bottom, Layout.xxLarge)
             }
         }
-        .animation(.smooth(duration: 0.35), value: step)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: step)
         .alert("Couldn't save profile", isPresented: Binding(
             get: { persistenceError != nil },
             set: { if !$0 { persistenceError = nil } }
@@ -57,19 +58,25 @@ struct OnboardingView: View {
     // MARK: - Steps
 
     private var welcomeStep: some View {
-        VStack(spacing: 18) {
-            Image(systemName: "flame.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(Theme.accentGradient)
-                .padding(28)
-                .glassEffect(.regular, in: .circle)
+        VStack(spacing: Layout.xLarge) {
+            Text("A little tracking. A lot of living.")
+                .font(.subheadline.weight(.heavy))
+                .foregroundStyle(Theme.muted)
+                .padding(.top, 32)
 
-            Text("Steak")
-                .font(.system(size: 44, weight: .bold, design: .rounded))
+            SteakIllustration()
+                .frame(maxWidth: 260)
+                .rotationEffect(.degrees(-8))
+                .padding(.vertical, 16)
+
+            Text("steak.")
+                .font(.system(size: 80, weight: .black, design: .rounded))
+                .tracking(-5)
+                .foregroundStyle(Color.steakAccent)
 
             Text("Track what you eat.\nHit your goals.")
-                .font(.title3)
-                .foregroundStyle(.secondary)
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
         }
     }
@@ -83,14 +90,14 @@ struct OnboardingView: View {
                 .textFieldStyle(.plain)
                 .font(.title2.weight(.medium))
                 .multilineTextAlignment(.center)
-                .padding(20)
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 20))
+                .padding(Layout.xLarge)
+                .steakPanel(radius: 16)
         }
     }
 
     private var sexStep: some View {
         StepContainer(title: "Biological sex", subtitle: "Used to estimate your metabolism.") {
-            HStack(spacing: 14) {
+            HStack(spacing: Layout.medium) {
                 ForEach(Sex.allCases) { option in
                     optionCard(option.label, selected: sex == option) { sex = option }
                 }
@@ -106,15 +113,10 @@ struct OnboardingView: View {
 
     private var bodyStep: some View {
         StepContainer(title: "Height & weight", subtitle: "We use this to calculate your calorie needs.") {
-            VStack(spacing: 14) {
-                Picker("Units", selection: Binding(
-                    get: { UnitsSystem.metric },
-                    set: { _ in }
-                )) {
-                    Text("kg · cm").tag(UnitsSystem.metric)
-                    Text("lb · ft").tag(UnitsSystem.imperial)
-                }
-                .pickerStyle(.segmented)
+            VStack(spacing: Layout.medium) {
+                Text("Kilograms & centimeters. Change units later in Profile.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.muted)
 
                 numberField("Weight (kg)", text: $weightText)
                 numberField("Height (cm)", text: $heightText)
@@ -124,7 +126,7 @@ struct OnboardingView: View {
 
     private var activityStep: some View {
         StepContainer(title: "Activity level", subtitle: "How much do you move?") {
-            VStack(spacing: 10) {
+            VStack(spacing: Layout.small) {
                 ForEach(ActivityLevel.allCases) { level in
                     selectRow(
                         title: level.label,
@@ -138,7 +140,7 @@ struct OnboardingView: View {
 
     private var goalStep: some View {
         StepContainer(title: "What's the plan?", subtitle: nil) {
-            VStack(spacing: 10) {
+            VStack(spacing: Layout.small) {
                 ForEach(Goal.allCases) { option in
                     selectRow(
                         title: option.label,
@@ -152,19 +154,19 @@ struct OnboardingView: View {
 
     private var planStep: some View {
         StepContainer(title: "Your daily target", subtitle: "Based on Mifflin-St Jeor. You can change this anytime.") {
-            VStack(spacing: 16) {
+            VStack(spacing: Layout.large) {
                 Text("\(previewTarget)")
                     .font(.system(size: 64, weight: .bold, design: .rounded))
                     .contentTransition(.numericText())
                 Text("kcal / day")
                     .foregroundStyle(.secondary)
 
-                VStack(spacing: 8) {
+                VStack(spacing: Layout.small) {
                     summaryRow("Maintenance", value: "\(previewTDEE.kcalText) kcal")
                     summaryRow("Goal", value: goal.label)
                 }
-                .padding(16)
-                .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                .padding(Layout.large)
+                .steakPanel(fill: Theme.blush, radius: 20)
             }
         }
     }
@@ -172,36 +174,27 @@ struct OnboardingView: View {
     // MARK: - Pieces
 
     private var background: some View {
-        Color.black.overlay {
-            RadialGradient(
-                colors: [Color.steakAccent.opacity(0.22), .clear],
-                center: .top,
-                startRadius: 50,
-                endRadius: 600
-            )
-            .ignoresSafeArea()
-        }
-        .ignoresSafeArea()
+        AtmosphericBackground()
     }
 
     private var progressBar: some View {
         GeometryReader { geo in
             Capsule()
-                .fill(.white.opacity(0.12))
+                .fill(Theme.blush)
                 .overlay(alignment: .leading) {
                     Capsule()
                         .fill(Theme.accentGradient)
                         .frame(width: geo.size.width * CGFloat(step + 1) / CGFloat(steps))
-                        .animation(.smooth, value: step)
+                        .animation(reduceMotion ? nil : .smooth, value: step)
                 }
         }
-        .frame(height: 4)
-        .padding(.horizontal, 32)
+        .frame(height: 8)
+        .padding(.horizontal, Layout.section)
     }
 
     private var navButtons: some View {
-        GlassEffectContainer(spacing: 14) {
-            HStack(spacing: 14) {
+        Group {
+            HStack(spacing: Layout.medium) {
                 if step > 0 {
                     Button {
                         withAnimation { step -= 1 }
@@ -210,20 +203,21 @@ struct OnboardingView: View {
                             .font(.title3.weight(.semibold))
                             .frame(width: 56, height: 56)
                     }
-                    .glassEffect(.regular.interactive(), in: .circle)
+                    .buttonStyle(SteakButtonStyle(prominent: false))
+                    .accessibilityLabel("Previous step")
                 }
 
                 Button {
                     advance()
                 } label: {
-                    Text(step == steps - 1 ? "Start tracking" : "Continue")
+                    Text(step == steps - 1 ? "Start tracking" : (step == 0 ? "Build my food diary" : "Continue"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                 }
-                .glassEffect(.regular.interactive(), in: .capsule)
+                .buttonStyle(SteakButtonStyle())
+                .tint(.steakAccent)
                 .disabled(!canAdvance)
-                .opacity(canAdvance ? 1 : 0.45)
             }
         }
     }
@@ -234,16 +228,16 @@ struct OnboardingView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .frame(height: 64)
-                .glassEffect(selected ? .clear.interactive().tint(.steakAccent.opacity(0.5)) : .regular.interactive(),
-                             in: .rect(cornerRadius: 20))
+                .steakPanel(fill: selected ? Theme.blush : .white, radius: 16)
                 .overlay {
                     if selected {
-                        RoundedRectangle(cornerRadius: 20)
-                            .strokeBorder(Theme.accentGradient, lineWidth: 1.5)
+                        RoundedRectangle(cornerRadius: Layout.mediumCornerRadius)
+                            .strokeBorder(Theme.accentGradient, lineWidth: 3)
                     }
                 }
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func selectRow(title: String, detail: String, selected: Bool, action: @escaping () -> Void) -> some View {
@@ -258,10 +252,11 @@ struct OnboardingView: View {
                     .font(.title3)
                     .foregroundStyle(selected ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Color.secondary))
             }
-            .padding(16)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 18))
+            .padding(Layout.large)
+            .steakPanel(fill: selected ? Theme.blush : .white, radius: 16)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func numberField(_ placeholder: String, text: Binding<String>) -> some View {
@@ -270,8 +265,8 @@ struct OnboardingView: View {
             .textFieldStyle(.plain)
             .font(.title2.weight(.medium))
             .multilineTextAlignment(.center)
-            .padding(20)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 20))
+            .padding(Layout.xLarge)
+            .steakPanel(radius: 16)
     }
 
     private func summaryRow(_ label: String, value: String) -> some View {
@@ -357,22 +352,22 @@ private struct StepContainer<Content: View>: View {
     }
 
     var body: some View {
-        VStack(spacing: 22) {
-            Spacer(minLength: 24)
-            VStack(spacing: 8) {
+        VStack(spacing: Layout.xxLarge) {
+            Spacer(minLength: Layout.xxLarge)
+            VStack(spacing: Layout.small) {
                 Text(title)
                     .font(.system(size: 30, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.subheadline)
+                        .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
             }
             content
-                .padding(.horizontal, 28)
-            Spacer(minLength: 24)
+                .padding(.horizontal, Layout.largeCornerRadius)
+            Spacer(minLength: Layout.xxLarge)
         }
     }
 }

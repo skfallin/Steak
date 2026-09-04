@@ -3,69 +3,66 @@ import SwiftUI
 struct CalorieRing: View {
     let consumed: Double
     let goal: Double
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var progress: Double {
         guard consumed.isFinite, goal.isFinite, goal > 0 else { return 0 }
         return min(max(consumed / goal, 0), 1)
     }
 
-    private var remaining: Double {
-        guard goal.isFinite, consumed.isFinite else { return 0 }
-        return max((goal - consumed).rounded(), 0)
-    }
-
     private var isOver: Bool { consumed.isFinite && goal.isFinite && consumed > goal }
 
     private var displayedAmount: Double {
         guard consumed.isFinite, goal.isFinite else { return 0 }
-        return isOver ? max((consumed - goal).rounded(), 0) : remaining
+        return abs((goal - consumed).rounded())
     }
 
     var body: some View {
-        ZStack {
-            Circle()
-                .stroke(.white.opacity(0.1), lineWidth: 18)
-
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    AngularGradient(
-                        colors: isOver
-                            ? [Color.red.opacity(0.9), Color.red]
-                            : [Color(red: 1.0, green: 0.42, blue: 0.21),
-                               Color(red: 1.0, green: 0.68, blue: 0.25),
-                               Color(red: 1.0, green: 0.42, blue: 0.21)],
-                        center: .center,
-                        startAngle: .degrees(-90),
-                        endAngle: .degrees(270)
-                    ),
-                    style: StrokeStyle(lineWidth: 18, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-                .animation(.smooth(duration: 0.6), value: progress)
-
-            VStack(spacing: 2) {
-                Text(isOver ? "over" : "left")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-
-                Text(displayedAmount.kcalText)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.35)
-                    .frame(width: 100)
-                    .padding(.horizontal, 8)
-                    .contentTransition(.numericText())
-                    .animation(.smooth, value: remaining)
-
-                Text("kcal")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(displayedAmount.kcalText)
+                        .font(.largeTitle.weight(.black))
+                    Text(isOver ? "kcal over target" : "kcal left today")
+                        .font(.title3.weight(.bold))
+                    ProgressView(value: progress).tint(.white)
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                calorieCut
             }
         }
-        .padding(14)
-        .glassEffect(.regular, in: .circle)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(isOver ? "Calories over target" : "Calories remaining")
+        .accessibilityValue("\(displayedAmount.kcalText) kilocalories")
+    }
+
+    private var calorieCut: some View {
+        ZStack {
+            SteakCut().fill(Theme.ink).offset(y: 6)
+            SteakCut().fill(Theme.paper)
+            SteakCut().stroke(.white, lineWidth: 14)
+            SteakCut()
+                .trim(from: 0, to: progress)
+                .stroke(Theme.ink, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                .animation(reduceMotion ? nil : .smooth(duration: 0.5), value: progress)
+
+            VStack(spacing: 0) {
+                Text(displayedAmount.kcalText)
+                    .font(.system(size: 62, weight: .black, design: .rounded))
+                    .tracking(-3)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.45)
+                    .contentTransition(.numericText())
+                Text(isOver ? "kcal over target" : "kcal left today")
+                    .font(.subheadline.weight(.bold))
+            }
+            .foregroundStyle(Theme.ink)
+            .padding(.horizontal, 48)
+        }
+        .padding(10)
     }
 }
 
@@ -74,6 +71,8 @@ struct MacroBar: View {
     let value: Double
     let target: Double
     let color: Color
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var progress: Double {
         guard value.isFinite, target.isFinite, target > 0 else { return 0 }
@@ -82,28 +81,37 @@ struct MacroBar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
-            HStack {
-                Text(label)
-                    .font(.caption.weight(.semibold))
-                    .textCase(.uppercase)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text("\(value.gramsText) / \(target.gramsText) g")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 4) { labels }
+                } else {
+                    HStack { labels }
+                }
             }
+            .foregroundStyle(Theme.ink)
 
-            GeometryReader { geo in
-                Capsule()
-                    .fill(.white.opacity(0.1))
+            GeometryReader { geometry in
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.paper)
                     .overlay(alignment: .leading) {
-                        Capsule()
+                        RoundedRectangle(cornerRadius: 3)
                             .fill(color)
-                            .frame(width: geo.size.width * progress)
-                            .animation(.smooth(duration: 0.5), value: progress)
+                            .frame(width: geometry.size.width * progress)
                     }
+                    .overlay { RoundedRectangle(cornerRadius: 4).strokeBorder(Theme.ink, lineWidth: 1.5) }
             }
-            .frame(height: 6)
+            .frame(height: 13)
+            .animation(reduceMotion ? nil : .smooth(duration: 0.5), value: progress)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var labels: some View {
+        Group {
+            Text(label).font(.subheadline.weight(.heavy))
+            if !dynamicTypeSize.isAccessibilitySize { Spacer() }
+            Text("\(value.gramsText) / \(target.gramsText) g")
+                .font(.caption.weight(.semibold).monospacedDigit())
         }
     }
 }

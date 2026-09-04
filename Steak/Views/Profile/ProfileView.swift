@@ -14,27 +14,47 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if let profile {
-                    content(profile)
-                } else {
-                    ContentUnavailableView("No profile", systemImage: "person.crop.circle.badge.questionmark")
+            ZStack {
+                AtmosphericBackground()
+
+                Group {
+                    if let profile {
+                        content(profile)
+                    } else {
+                        ContentUnavailableView("No profile", systemImage: "person.crop.circle.badge.questionmark")
+                    }
                 }
             }
-            .background(Color.black.ignoresSafeArea())
-            .navigationTitle("Profile")
+            .navigationTitle("Your recipe")
+            .tint(.steakAccent)
         }
     }
 
     private func content(_ profile: UserProfile) -> some View {
         Form {
+            Section {
+                HStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(profile.name.isEmpty ? "Your profile" : profile.name)
+                            .font(.largeTitle.weight(.black))
+                        Text("Your body. Your goals.")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .foregroundStyle(.white)
+                    Spacer(minLength: 0)
+                    SteakIllustration().frame(width: 90).rotationEffect(.degrees(10))
+                }
+                .padding(.vertical, 14)
+            }
+            .listRowBackground(Color.steakAccent)
             profileSection(profile)
             planSection(profile)
             unitsSection(profile)
             dataSection
             aboutSection
         }
-        .scrollContentBackground(.hidden)
+        .steakForm()
+        .contentMargins(.top, Layout.small, for: .scrollContent)
     }
 
     // MARK: - Sections
@@ -59,7 +79,7 @@ struct ProfileView: View {
                     Text("Age")
                     Spacer()
                     Text("\(profile.age)")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.muted)
                 }
             }
 
@@ -105,7 +125,7 @@ struct ProfileView: View {
 
             LabeledContent("Maintenance") {
                 Text("\(CalorieCalculator.tdee(profile: profile).kcalText) kcal")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.muted)
             }
 
             Toggle("Custom daily target", isOn: Binding(
@@ -134,7 +154,7 @@ struct ProfileView: View {
                         Text("Daily target")
                         Spacer()
                         Text("\(manual) kcal")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.muted)
                     }
                 }
             } else {
@@ -162,7 +182,7 @@ struct ProfileView: View {
         Section("Data") {
             LabeledContent("Logged foods") {
                 Text("\(allEntries.count)")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.muted)
             }
 
             Button(role: .destructive) {
@@ -208,7 +228,7 @@ struct ProfileView: View {
     private var aboutSection: some View {
         Section("About") {
             LabeledContent("Version") {
-                Text(appVersion).foregroundStyle(.secondary)
+                Text(appVersion).foregroundStyle(Theme.muted)
             }
             LabeledContent("Food data") {
                 Link("Open Food Facts", destination: URL(string: "https://world.openfoodfacts.org")!)
@@ -324,14 +344,18 @@ private struct UnitAwareNumberField: View {
                     .onSubmit(submit)
                     .submitLabel(.done)
             } else {
-                Text(display(value))
-                    .foregroundStyle(.secondary)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        draft = ""
-                        isEditing = true
-                        focused = true
-                    }
+                Button {
+                    draft = ""
+                    isEditing = true
+                    focused = true
+                } label: {
+                    Text(display(value))
+                        .foregroundStyle(Theme.muted)
+                        .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Edit \(label)")
+                .accessibilityValue(display(value))
             }
         }
         .onChange(of: focused) { _, isFocused in

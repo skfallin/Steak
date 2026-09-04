@@ -77,7 +77,7 @@ struct PortionPickerSheet: View {
                         }
                     }
                     .padding(18)
-                    .glassEffect(.regular, in: .rect(cornerRadius: 22))
+                    .steakPanel(radius: 20)
 
                     previewCard
 
@@ -93,7 +93,7 @@ struct PortionPickerSheet: View {
                 .padding(20)
             }
             .scrollBounceBehavior(.basedOnSize)
-            .background(Color.black)
+            .background(Theme.paper)
             .navigationTitle("Add food")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -102,7 +102,7 @@ struct PortionPickerSheet: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .onAppear {
             let initial = product.servingQuantityGrams.flatMap { NutritionSafety.isValidServingGrams($0) ? $0 : nil } ?? 100
             gramsText = initial.gramsText
@@ -150,7 +150,7 @@ struct PortionPickerSheet: View {
             }
         }
         .padding(18)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
+        .steakPanel(fill: Theme.blush, radius: 20)
     }
 
     private func macroPill(_ label: String, value: Double, color: Color) -> some View {
@@ -171,9 +171,8 @@ struct PortionPickerSheet: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
         }
-        .glassEffect(.regular.interactive().tint(.steakAccent.opacity(0.45)), in: .capsule)
+        .buttonStyle(SteakButtonStyle())
         .disabled(!isValidEntry)
-        .opacity(isValidEntry ? 1 : 0.5)
     }
 
     private func addEntry() {
