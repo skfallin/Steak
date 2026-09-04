@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="200" viewBox="0 0 250 200" fill="none">
+  <title>Ribeye steak</title>
+  <defs>
+    <linearGradient id="meat" x1="75" y1="43" x2="171" y2="156" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#CB3545"/>
+      <stop offset=".48" stop-color="#B92539"/>
+      <stop offset="1" stop-color="#921D32"/>
+    </linearGradient>
+    <linearGradient id="cap" x1="96" y1="31" x2="117" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A82438"/>
+      <stop offset="1" stop-color="#CF4050"/>
+    </linearGradient>
+    <clipPath id="cut">
+      <path d="M39 90C46 64 70 41 101 33C131 26 168 31 193 43C212 52 220 65 212 80C202 98 208 113 196 130C181 152 148 163 113 162C79 162 49 152 38 132C31 120 34 106 39 90Z"/>
+    </clipPath>
+  </defs>
+  <path d="M28 96C35 64 63 38 98 29C130 21 171 27 199 40C224 52 234 71 224 91C216 107 220 124 207 144C190 170 153 183 113 183C74 183 40 171 27 148C18 132 21 113 28 96Z" fill="#160A0C" fill-opacity=".22"/>
+  <path d="M28 87C35 55 63 29 98 20C130 12 171 18 199 31C224 43 234 62 224 82C216 98 220 115 207 135C190 161 153 174 113 174C74 174 40 162 27 139C18 123 21 104 28 87Z" fill="#FFF3DF"/>
+  <g clip-path="url(#cut)">
+    <path d="M24 24H226V173H24Z" fill="url(#meat)"/>
+    <path d="M34 107C40 69 65 44 102 33C139 23 180 33 203 49L213 65C185 56 170 60 150 58C128 54 105 55 88 66C67 79 58 92 54 113L44 135Z" fill="url(#cap)"/>
+    <path d="M167 63C184 60 204 63 213 68C216 77 207 89 207 101C207 119 199 135 187 145C166 129 151 109 153 86C154 76 160 67 167 63Z" fill="#74162A" fill-opacity=".14"/>
+    <path d="M39 118C43 96 51 79 68 67C84 56 101 49 118 51C131 50 139 55 149 54C163 54 166 59 178 58C194 57 205 62 213 68C198 65 188 64 178 65C164 67 160 61 147 62C135 63 129 57 117 59C101 58 89 65 78 73C66 81 60 92 56 105C54 114 52 117 52 128L50 140L43 136Z" fill="#F5E5CE"/>
+    <path d="M152 60C159 61 163 63 169 63C160 67 154 76 153 86C151 97 156 106 160 115C166 128 176 137 187 145C168 137 155 124 149 110C145 101 141 94 143 84C144 74 148 67 152 60Z" fill="#F5E5CE"/>
+    <path d="M103 59C108 58 111 60 112 64C113 69 117 74 123 77C114 75 108 70 107 66C106 63 104 62 103 59Z" fill="#F5E5CE"/>
+  </g>
+</svg>

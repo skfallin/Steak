@@ -136,24 +136,10 @@ struct SteakCut: Shape {
 
 struct SteakIllustration: View {
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                SteakCut().fill(Theme.shadow).offset(y: 7)
-                SteakCut().fill(Color.steakAccent)
-                SteakCut().stroke(.white, lineWidth: 9)
-                Path { path in
-                    path.move(to: CGPoint(x: 0.13, y: 0.55))
-                    path.addCurve(to: CGPoint(x: 0.85, y: 0.24), control1: CGPoint(x: 0.57, y: 0.17), control2: CGPoint(x: 0.53, y: 0.73))
-                    path.move(to: CGPoint(x: 0.34, y: 0.38))
-                    path.addQuadCurve(to: CGPoint(x: 0.32, y: 0.88), control: CGPoint(x: 0.63, y: 0.69))
-                    path.move(to: CGPoint(x: 0.53, y: 0.59))
-                    path.addQuadCurve(to: CGPoint(x: 0.83, y: 0.68), control: CGPoint(x: 0.65, y: 0.77))
-                }
-                .transform(CGAffineTransform(scaleX: geometry.size.width, y: geometry.size.height))
-                .stroke(Theme.cutPaper, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-            }
-        }
-        .aspectRatio(1.25, contentMode: .fit)
-        .accessibilityHidden(true)
+        Image("SteakIllustration")
+            .renderingMode(.original)
+            .resizable()
+            .aspectRatio(1.25, contentMode: .fit)
+            .accessibilityHidden(true)
     }
 }
